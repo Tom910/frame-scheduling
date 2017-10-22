@@ -1,27 +1,20 @@
 {
-    "compilerOptions": {
-      "target": "es5",
-      "module": "commonjs",
-      "strictNullChecks": true,
-      "forceConsistentCasingInFileNames": true,
-      "noFallthroughCasesInSwitch": true,
-      "noImplicitAny" : true,
-      "noImplicitReturns": true,
-      "noImplicitThis": true,
-      "noUnusedLocals": true,
-      "noUnusedParameters": true,
-      "declaration": true,
-      "outDir": "./lib",
-      "lib": [
-        "es2015",
-        "dom"
-      ],
-      "typeRoots": [
-        "./node_modules/@types"
-      ]
-    },
-    "include": [
-      "src/**/*",
-      "test/**/*"
-    ]
-  }
+  "compilerOptions": {
+    "target": "es5",
+    "module": "commonjs",
+    "strict": true,
+    "strictNullChecks": true,
+    "forceConsistentCasingInFileNames": true,
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitAny": true,
+    "noImplicitReturns": true,
+    "noImplicitThis": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "declaration": true,
+    "outDir": "./lib",
+    "lib": ["es2015", "dom"],
+    "typeRoots": ["./node_modules/@types"]
+  },
+  "include": ["src/**/*", "test/**/*"]
+}

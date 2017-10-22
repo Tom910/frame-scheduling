@@ -1,8 +1,7 @@
 {
   "name": "frame-scheduling",
   "version": "0.1.0",
-  "description":
-    "Asynchronous start of functions in JS. Supports priority and interrupt execution every 16 milliseconds, to achieve 60fps.",
+  "description": "Asynchronous start of functions in JS. Supports priority and interrupt execution every 16 milliseconds, to achieve 60fps.",
   "main": "lib/frameScheduling.js",
   "scripts": {
     "build": "tsc",
@@ -21,16 +20,22 @@
     "url": "https://github.com/Tom910/frame-scheduling/issues"
   },
   "jest": {
-    "moduleFileExtensions": ["ts", "js"],
+    "moduleFileExtensions": [
+      "ts",
+      "js"
+    ],
     "transform": {
       "^.+\\.ts$": "<rootDir>/preprocessor.js"
     },
     "timers": "fake",
-    "testMatch": ["<rootDir>/tests/**/*.(ts|js)"]
+    "testMatch": [
+      "<rootDir>/tests/**/*.(ts|js)"
+    ]
   },
   "homepage": "https://github.com/Tom910/frame-scheduling#readme",
   "devDependencies": {
     "@types/jest": "^21.1.4",
+    "@types/node": "^8.0.46",
     "jest": "^21.2.1",
     "prettier": "1.7.4",
     "tslint": "^5.8.0",
