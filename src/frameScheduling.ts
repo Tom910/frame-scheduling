@@ -19,9 +19,11 @@ class Job {
   }
 }
 
+export const P_LOWER = 1;
 export const P_LOW = 3;
 export const P_NORMAL = 5;
 export const P_HIGH = 7;
+export const P_IMPORTANT = 10;
 
 const sortByPriority = (list: Job[]) => {
   return list.sort(
