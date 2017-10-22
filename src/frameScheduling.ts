@@ -1,9 +1,10 @@
 let defer: Function;
+const context = typeof window !== "undefined" ? window : global;
 
-if ("requestAnimationFrame" in window) {
-  defer = requestAnimationFrame.bind(window);
+if ("requestAnimationFrame" in context) {
+  defer = requestAnimationFrame.bind(context);
 } else {
-  defer = setTimeout.bind(window);
+  defer = setTimeout.bind(context);
 }
 
 const timeLifeFrame = 16; // 16ms === 60fps
