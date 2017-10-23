@@ -15,14 +15,22 @@ export const P_NORMAL = 5;
 export const P_HIGH = 7;
 export const P_IMPORTANT = 10;
 
-const sortJobsByNumber = (jobs: Object) =>
-  Object.keys(jobs).sort(
-    (left: string, right: string) => Number(left) - Number(right)
-  );
-
 const frameScheduling = () => {
   const listJobs: { [l: string]: Function[] } = {};
   let deferScheduled = false;
+  let jobsSortCached: string[];
+  let jobsSortActual = false;
+
+  const sortJobsByNumber = (jobs: Object) => {
+    if (!jobsSortActual) {
+      jobsSortCached = Object.keys(jobs).sort(
+        (left: string, right: string) => Number(left) - Number(right)
+      );
+      jobsSortActual = true;
+    }
+
+    return jobsSortCached;
+  };
 
   const runDefer = () => {
     if (!deferScheduled) {
@@ -35,6 +43,7 @@ const frameScheduling = () => {
   const addJob = (callback: Function, priority: number) => {
     if (!listJobs[priority]) {
       listJobs[priority] = [];
+      jobsSortActual = false;
     }
     listJobs[priority].push(callback);
   };
@@ -48,6 +57,8 @@ const frameScheduling = () => {
       listJobs[Number(key) + 1] = listJobs[key];
       delete listJobs[key];
     }
+
+    jobsSortActual = false;
   };
 
   const runJobs = () => {
@@ -75,6 +86,7 @@ const frameScheduling = () => {
         if (!jobs.length) {
           delete listJobs[key];
           keys.length = keys.length - 1;
+          jobsSortActual = false;
         }
       }
     }
