@@ -65,7 +65,12 @@ const frameScheduling = () => {
         const key = keys[keys.length - 1];
         const jobs = listJobs[key];
         const job = jobs.shift();
-        job && job();
+
+        try {
+          job && job();
+        } catch (e) {
+          console.error(e);
+        }
 
         if (!jobs.length) {
           delete listJobs[key];

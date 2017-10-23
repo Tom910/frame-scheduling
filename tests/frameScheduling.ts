@@ -22,6 +22,7 @@ const mockDataNow = () => {
 
 describe("frameScheduling", () => {
   const originDateNow = Date.now.bind(Date);
+  const originConsoleError = console.error;
 
   beforeEach(() => {
     setTimeout.mockClear();
@@ -29,6 +30,7 @@ describe("frameScheduling", () => {
 
   afterEach(() => {
     Date.now = originDateNow;
+    console.error = originConsoleError;
   });
 
   it("Run multi tasks in 1 frame", () => {
@@ -135,5 +137,22 @@ describe("frameScheduling", () => {
     jest.runOnlyPendingTimers();
     jest.runOnlyPendingTimers();
     expect(result).toEqual(354);
+  });
+
+  it("Catching errors", () => {
+    let result = 0;
+
+    console.error = jest.fn();
+
+    frameScheduling(() => (result += 2));
+    frameScheduling(() => {
+      throw new Error("Error async");
+    });
+    frameScheduling(() => (result += 3));
+
+    jest.runAllTimers();
+
+    expect(result).toEqual(5);
+    expect(setTimeout.mock.calls.length).toBe(1);
   });
 });
