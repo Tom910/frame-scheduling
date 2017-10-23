@@ -100,7 +100,7 @@ const frameScheduling = () => {
     }
   };
 
-  return (callback: Function, { priority = P_NORMAL } = {}) => {
+  return function scheduling(callback: Function, { priority = P_NORMAL } = {}) {
     addJob(callback, priority);
 
     runDefer();
