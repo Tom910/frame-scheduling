@@ -9,32 +9,19 @@ if ("requestAnimationFrame" in context) {
 
 const timeLifeFrame = 16; // 16ms === 60fps
 
-class Job {
-  fn: Function;
-  priority: number;
-  iterations: number;
-  constructor(callback: Function, priority: number) {
-    this.fn = callback;
-    this.priority = priority;
-    this.iterations = 0;
-  }
-}
-
 export const P_LOWER = 1;
 export const P_LOW = 3;
 export const P_NORMAL = 5;
 export const P_HIGH = 7;
 export const P_IMPORTANT = 10;
 
-const sortByPriority = (list: Job[]) => {
-  return list.sort(
-    (left: Job, right: Job) =>
-      right.priority - right.iterations - left.priority - left.iterations
+const sortJobsByNumber = (jobs: Object) =>
+  Object.keys(jobs).sort(
+    (left: string, right: string) => Number(left) - Number(right)
   );
-};
 
 const frameScheduling = () => {
-  const listJobs: Job[] = [];
+  const listJobs: { [l: string]: Function[] } = {};
   let deferScheduled = false;
 
   const runDefer = () => {
@@ -45,33 +32,59 @@ const frameScheduling = () => {
     deferScheduled = true;
   };
 
+  const addJob = (callback: Function, priority: number) => {
+    if (!listJobs[priority]) {
+      listJobs[priority] = [];
+    }
+    listJobs[priority].push(callback);
+  };
+
+  const raisingOfJob = () => {
+    const keys = sortJobsByNumber(listJobs);
+
+    for (var i = keys.length; i > 0; i--) {
+      const key = keys[i - 1];
+
+      listJobs[Number(key) + 1] = listJobs[key];
+      delete listJobs[key];
+    }
+  };
+
   const runJobs = () => {
     const timeRun = Date.now();
-    sortByPriority(listJobs);
+    const keys = sortJobsByNumber(listJobs);
+    let empty = false;
 
     while (true) {
-      if (listJobs.length === 0 || Date.now() - timeRun > timeLifeFrame) {
+      if (!keys.length) {
+        empty = true;
+      }
+      if (empty || Date.now() - timeRun > timeLifeFrame) {
         break;
       } else {
-        const job = listJobs.shift();
+        const key = keys[keys.length - 1];
+        const jobs = listJobs[key];
+        const job = jobs.shift();
+        job && job();
 
-        job && job.fn();
+        if (!jobs.length) {
+          delete listJobs[key];
+          keys.length = keys.length - 1;
+        }
       }
     }
 
     deferScheduled = false;
 
-    if (listJobs.length !== 0) {
-      for (var i = 0; i < listJobs.length; i++) {
-        listJobs[i].iterations++;
-      }
+    if (!empty) {
+      raisingOfJob();
 
       runDefer();
     }
   };
 
   return (callback: Function, { priority = P_NORMAL } = {}) => {
-    listJobs.push(new Job(callback, priority));
+    addJob(callback, priority);
 
     runDefer();
   };
