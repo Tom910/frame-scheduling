@@ -20,6 +20,11 @@ const mockDataNow = () => {
   };
 };
 
+declare namespace setTimeout {
+  function mockClear(): void;
+  let mock: jest.MockContext<{}>;
+}
+
 describe("frameScheduling", () => {
   const originDateNow = Date.now.bind(Date);
   const originConsoleError = console.error;
@@ -75,7 +80,7 @@ describe("frameScheduling", () => {
   });
 
   it("Simple priority", () => {
-    let result = [];
+    let result: string[] = [];
 
     frameScheduling(
       () => {
@@ -106,7 +111,7 @@ describe("frameScheduling", () => {
   });
 
   it("Priority with upfiling iterations", () => {
-    let result = [];
+    let result: string[] = [];
     mockDataNow();
 
     frameScheduling(() => result.push("Bye"), { priority: 0 });
