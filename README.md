@@ -6,7 +6,17 @@ import frameScheduling, { P_IMPORTANT } from 'frame-scheduling';
 frameScheduling(() => { Action() }, { priority: P_IMPORTANT });
 ```
 
-Asynchronous running tasks in JavaScript. Supports priority and interrupt execution every 16 milliseconds, to achieve 60fps.
+Asynchronous running tasks in JavaScript based on requestAnimationFrame. Supports priority and interrupt execution every 16 milliseconds, to achieve 60fps.
+
+## Installation
+
+```bash
+# yarn
+yarn add frame-scheduling
+
+# npm
+npm install --save frame-scheduling
+```
 
 ## Example
 ### Priority
