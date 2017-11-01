@@ -1,13 +1,13 @@
-let defer: Function;
 const context = typeof window !== "undefined" ? window : global;
 
+let defer: Function;
 if ("requestAnimationFrame" in context) {
   defer = requestAnimationFrame.bind(context);
 } else {
   defer = setTimeout.bind(context);
 }
 
-const timeLifeFrame = 16; // 16ms === 60fps
+const TIME_LIFE_FRAME = 16; // 16ms === 60fps
 
 export const P_LOWER = 1;
 export const P_LOW = 3;
@@ -15,9 +15,60 @@ export const P_NORMAL = 5;
 export const P_HIGH = 7;
 export const P_IMPORTANT = 10;
 
+interface listNode {
+  value: Function;
+  next: listNode | null;
+}
+
+class LinkedList {
+  private length: number;
+  private head: listNode | null;
+  private last: listNode;
+
+  constructor() {
+    this.head = null;
+    this.length = 0;
+  }
+
+  push(value: Function) {
+    const node: listNode = {
+      value: value,
+      next: null
+    };
+
+    if (this.length === 0) {
+      this.head = node;
+      this.last = node;
+    } else {
+      this.last.next = node;
+      this.last = node;
+    }
+
+    this.length++;
+  }
+
+  shift() {
+    if (this.length === 0 || !this.head) {
+      return;
+    }
+
+    const value = this.head.value;
+
+    this.head = this.head.next;
+    this.length--;
+
+    return value;
+  }
+
+  isEmpty() {
+    return this.length === 0;
+  }
+}
+
 const frameScheduling = () => {
-  const listJobs: { [l: string]: Function[] } = {};
+  const listJobs: { [l: string]: LinkedList } = {};
   let deferScheduled = false;
+
   let jobsSortCached: string[];
   let jobsSortActual = false;
 
@@ -42,7 +93,7 @@ const frameScheduling = () => {
 
   const addJob = (callback: Function, priority: number) => {
     if (!listJobs[priority]) {
-      listJobs[priority] = [];
+      listJobs[priority] = new LinkedList();
       jobsSortActual = false;
     }
     listJobs[priority].push(callback);
@@ -63,18 +114,18 @@ const frameScheduling = () => {
 
   const runJobs = () => {
     const timeRun = Date.now();
-    const keys = sortJobsByNumber(listJobs);
+    const keysJobs = sortJobsByNumber(listJobs);
     let empty = false;
 
     while (true) {
-      if (!keys.length) {
+      if (!keysJobs.length) {
         empty = true;
       }
-      if (empty || Date.now() - timeRun > timeLifeFrame) {
+      if (empty || Date.now() - timeRun > TIME_LIFE_FRAME) {
         break;
       } else {
-        const key = keys[keys.length - 1];
-        const jobs = listJobs[key];
+        const keyJob = keysJobs[keysJobs.length - 1];
+        const jobs = listJobs[keyJob];
         const job = jobs.shift();
 
         try {
@@ -83,9 +134,9 @@ const frameScheduling = () => {
           console.error(e);
         }
 
-        if (!jobs.length) {
-          delete listJobs[key];
-          keys.length = keys.length - 1;
+        if (jobs.isEmpty()) {
+          delete listJobs[keyJob];
+          keysJobs.length = keysJobs.length - 1;
           jobsSortActual = false;
         }
       }
