@@ -48,13 +48,10 @@ class LinkedList {
   }
 
   shift() {
-    if (this.length === 0 || !this.head) {
-      return;
-    }
+    const currentHead = <listNode>this.head;
+    const value = currentHead.value;
 
-    const value = this.head.value;
-
-    this.head = this.head.next;
+    this.head = currentHead.next;
     this.length--;
 
     return value;
@@ -129,7 +126,7 @@ const frameScheduling = () => {
         const job = jobs.shift();
 
         try {
-          job && job();
+          job();
         } catch (e) {
           console.error(e);
         }

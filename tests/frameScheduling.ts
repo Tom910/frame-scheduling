@@ -20,17 +20,12 @@ const mockDataNow = () => {
   };
 };
 
-declare namespace setTimeout {
-  function mockClear(): void;
-  let mock: jest.MockContext<{}>;
-}
-
 describe("frameScheduling", () => {
   const originDateNow = Date.now.bind(Date);
   const originConsoleError = console.error;
 
   beforeEach(() => {
-    setTimeout.mockClear();
+    (<any>setTimeout).mockClear();
   });
 
   afterEach(() => {
@@ -52,7 +47,7 @@ describe("frameScheduling", () => {
     });
     jest.runOnlyPendingTimers();
 
-    expect(setTimeout.mock.calls.length).toBe(1);
+    expect((<any>setTimeout).mock.calls.length).toBe(1);
     expect(counter).toBe(3);
   });
 
@@ -75,7 +70,7 @@ describe("frameScheduling", () => {
 
     jest.runAllTimers();
 
-    expect(setTimeout.mock.calls.length).toBe(4);
+    expect((<any>setTimeout).mock.calls.length).toBe(4);
     expect(counter).toBe(4);
   });
 
@@ -106,7 +101,7 @@ describe("frameScheduling", () => {
 
     jest.runOnlyPendingTimers();
 
-    expect(setTimeout.mock.calls.length).toBe(1);
+    expect((<any>setTimeout).mock.calls.length).toBe(1);
     expect(result).toEqual(["React", "Angular", "Vue", "Ember"]);
   });
 
@@ -158,6 +153,23 @@ describe("frameScheduling", () => {
     jest.runAllTimers();
 
     expect(result).toEqual(5);
-    expect(setTimeout.mock.calls.length).toBe(1);
+    expect((<any>setTimeout).mock.calls.length).toBe(1);
+  });
+
+  it("Run different defer modes", () => {
+    jest.resetModules();
+
+    global["requestAnimationFrame"] = fn => setTimeout(fn, 0);
+
+    const scheduling = require("../src/frameScheduling");
+
+    let result = 0;
+
+    frameScheduling(() => (result += 2));
+    jest.runAllTimers();
+
+    delete global["requestAnimationFrame"];
+
+    expect(result).toBe(2);
   });
 });
