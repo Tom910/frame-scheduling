@@ -27,9 +27,10 @@
       "js"
     ],
     "transform": {
-      "^.+\\.ts$": "<rootDir>/preprocessor.js"
+      "^.+\\.ts$": "<rootDir>/node_modules/ts-jest/preprocessor.js"
     },
     "timers": "fake",
+    "mapCoverage": true,
     "testMatch": [
       "<rootDir>/tests/**/*.(ts|js)"
     ]
@@ -41,6 +42,7 @@
     "coveralls": "^3.0.0",
     "jest": "^21.2.1",
     "prettier": "1.7.4",
+    "ts-jest": "^21.1.4",
     "tslint": "^5.8.0",
     "typescript": "^2.5.3"
   }
