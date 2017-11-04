@@ -1,6 +1,6 @@
 {
   "name": "frame-scheduling",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "Asynchronous start of functions in JS. Supports priority and interrupt execution every 16 milliseconds, to achieve 60fps.",
   "main": "lib/frameScheduling.js",
   "scripts": {
