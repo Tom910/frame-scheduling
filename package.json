@@ -7,7 +7,9 @@
     "build": "tsc",
     "prepublish": "npm run build",
     "test": "jest",
-    "test:watch": "jest --watch"
+    "test:coverage": "jest --coverage",
+    "test:watch": "jest --watch",
+    "cli": "npm run test:coverage && cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js"
   },
   "repository": {
     "type": "git",
@@ -36,6 +38,7 @@
   "devDependencies": {
     "@types/jest": "^21.1.4",
     "@types/node": "^8.0.46",
+    "coveralls": "^3.0.0",
     "jest": "^21.2.1",
     "prettier": "1.7.4",
     "tslint": "^5.8.0",
