@@ -1,5 +1,8 @@
 # Frame Scheduling
 
+[![Build Status](https://travis-ci.org/Tom910/frame-scheduling.svg?branch=master)](https://travis-ci.org/Tom910/frame-scheduling)
+[![Coverage Status](https://coveralls.io/repos/github/Tom910/frame-scheduling/badge.svg?branch=master)](https://coveralls.io/github/Tom910/frame-scheduling?branch=master)
+
 ```js
 import frameScheduling, { P_IMPORTANT } from 'frame-scheduling';
 
