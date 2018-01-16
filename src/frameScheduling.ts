@@ -3,6 +3,8 @@ const context = typeof window !== "undefined" ? window : global;
 let defer: Function;
 if ("requestAnimationFrame" in context) {
   defer = requestAnimationFrame.bind(context);
+} else if ("setImmediate" in context) {
+  defer = setImmediate.bind(context);
 } else {
   defer = setTimeout.bind(context);
 }

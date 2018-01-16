@@ -25,6 +25,7 @@ describe("frameScheduling", () => {
   const originConsoleError = console.error;
 
   beforeEach(() => {
+    (<any>setImmediate).mockClear();
     (<any>setTimeout).mockClear();
   });
 
@@ -47,7 +48,7 @@ describe("frameScheduling", () => {
     });
     jest.runOnlyPendingTimers();
 
-    expect((<any>setTimeout).mock.calls.length).toBe(1);
+    expect((<any>setImmediate).mock.calls.length).toBe(1);
     expect(counter).toBe(3);
   });
 
@@ -70,7 +71,7 @@ describe("frameScheduling", () => {
 
     jest.runAllTimers();
 
-    expect((<any>setTimeout).mock.calls.length).toBe(4);
+    expect((<any>setImmediate).mock.calls.length).toBe(4);
     expect(counter).toBe(4);
   });
 
@@ -101,7 +102,7 @@ describe("frameScheduling", () => {
 
     jest.runOnlyPendingTimers();
 
-    expect((<any>setTimeout).mock.calls.length).toBe(1);
+    expect((<any>setImmediate).mock.calls.length).toBe(1);
     expect(result).toEqual(["React", "Angular", "Vue", "Ember"]);
   });
 
@@ -153,7 +154,7 @@ describe("frameScheduling", () => {
     jest.runAllTimers();
 
     expect(result).toEqual(5);
-    expect((<any>setTimeout).mock.calls.length).toBe(1);
+    expect((<any>setImmediate).mock.calls.length).toBe(1);
   });
 
   it("Run different defer modes", () => {
@@ -164,16 +165,37 @@ describe("frameScheduling", () => {
     delete global["window"];
     global["requestAnimationFrame"] = fn => setTimeout(fn, 0);
 
-    const scheduling = require("../src/frameScheduling");
+    const scheduling = require("../src/frameScheduling").default;
 
     let result = 0;
 
-    frameScheduling(() => (result += 2));
+    scheduling(() => (result += 2));
     jest.runAllTimers();
 
     delete global["requestAnimationFrame"];
     global["window"] = originWindow;
 
     expect(result).toBe(2);
+    expect(setTimeout).toHaveBeenCalledTimes(1);
+  });
+
+  it("Using setTimeoutFallback", () => {
+      jest.resetModules();
+
+      const originSetImmediate = global.setImmediate;
+
+      delete global["setImmediate"];
+
+      const scheduling = require("../src/frameScheduling").default;
+
+      let result = 0;
+
+      scheduling(() => (result += 3));
+      jest.runAllTimers();
+
+      global["setImmediate"] = originSetImmediate;
+
+      expect(result).toBe(3);
+      expect(setTimeout).toHaveBeenCalledTimes(1);
   });
 });
