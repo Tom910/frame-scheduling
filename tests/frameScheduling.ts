@@ -1,4 +1,4 @@
-import frameScheduling, { P_LOW, P_HIGH } from "../src/frameScheduling";
+import frameScheduling, { P_HIGH, P_LOW } from "../src/frameScheduling";
 
 const mockDataNow = () => {
   let result = 1000;
@@ -25,8 +25,8 @@ describe("frameScheduling", () => {
   const originConsoleError = console.error;
 
   beforeEach(() => {
-    (<any>setImmediate).mockClear();
-    (<any>setTimeout).mockClear();
+    (setImmediate as any).mockClear();
+    (setTimeout as any).mockClear();
   });
 
   afterEach(() => {
@@ -48,7 +48,7 @@ describe("frameScheduling", () => {
     });
     jest.runOnlyPendingTimers();
 
-    expect((<any>setImmediate).mock.calls.length).toBe(1);
+    expect(setImmediate).toHaveBeenCalledTimes(1);
     expect(counter).toBe(3);
   });
 
@@ -71,18 +71,18 @@ describe("frameScheduling", () => {
 
     jest.runAllTimers();
 
-    expect((<any>setImmediate).mock.calls.length).toBe(4);
+    expect(setImmediate).toHaveBeenCalledTimes(4);
     expect(counter).toBe(4);
   });
 
   it("Simple priority", () => {
-    let result: string[] = [];
+    const result: string[] = [];
 
     frameScheduling(
       () => {
         result.push("Vue");
       },
-      { priority: P_LOW }
+      { priority: P_LOW },
     );
     frameScheduling(() => {
       result.push("Angular");
@@ -91,23 +91,23 @@ describe("frameScheduling", () => {
       () => {
         result.push("Ember");
       },
-      { priority: P_LOW }
+      { priority: P_LOW },
     );
     frameScheduling(
       () => {
         result.push("React");
       },
-      { priority: P_HIGH }
+      { priority: P_HIGH },
     );
 
     jest.runOnlyPendingTimers();
 
-    expect((<any>setImmediate).mock.calls.length).toBe(1);
+    expect(setImmediate).toHaveBeenCalledTimes(1);
     expect(result).toEqual(["React", "Angular", "Vue", "Ember"]);
   });
 
   it("Priority with upfiling iterations", () => {
-    let result: string[] = [];
+    const result: string[] = [];
     mockDataNow();
 
     frameScheduling(() => result.push("Bye"), { priority: 0 });
@@ -130,7 +130,7 @@ describe("frameScheduling", () => {
     frameScheduling(() => (result *= 2), { priority: 0 });
     frameScheduling(() => (result *= 3), { priority: 49 });
 
-    for (var i = 0; i < 100; i++) {
+    for (let i = 0; i < 100; i++) {
       frameScheduling(() => (result += 1), { priority: 90 });
       jest.runOnlyPendingTimers();
     }
@@ -154,13 +154,13 @@ describe("frameScheduling", () => {
     jest.runAllTimers();
 
     expect(result).toEqual(5);
-    expect((<any>setImmediate).mock.calls.length).toBe(1);
+    expect(setImmediate).toHaveBeenCalledTimes(1);
   });
 
   it("Run different defer modes", () => {
     jest.resetModules();
 
-    (global as any)["requestAnimationFrame"] = (fn: () => {}) => setTimeout(fn, 0);
+    (global as any).requestAnimationFrame = (fn: () => {}) => setTimeout(fn, 0);
 
     const scheduling = require("../src/frameScheduling").default;
 
@@ -169,7 +169,7 @@ describe("frameScheduling", () => {
     scheduling(() => (result += 2));
     jest.runAllTimers();
 
-    delete (global as any)["requestAnimationFrame"];
+    delete (global as any).requestAnimationFrame;
 
     expect(result).toBe(2);
     expect(setTimeout).toHaveBeenCalledTimes(1);
@@ -180,7 +180,7 @@ describe("frameScheduling", () => {
 
       const originSetImmediate = global.setImmediate;
 
-      delete global["setImmediate"];
+      delete global.setImmediate;
 
       const scheduling = require("../src/frameScheduling").default;
 
@@ -189,7 +189,7 @@ describe("frameScheduling", () => {
       scheduling(() => (result += 3));
       jest.runAllTimers();
 
-      global["setImmediate"] = originSetImmediate;
+      global.setImmediate = originSetImmediate;
 
       expect(result).toBe(3);
       expect(setTimeout).toHaveBeenCalledTimes(1);

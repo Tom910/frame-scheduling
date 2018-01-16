@@ -1,6 +1,6 @@
 const context = typeof window !== "undefined" ? window : global;
 
-let defer: Function;
+let defer: (f: () => void) => void;
 if ("requestAnimationFrame" in context) {
   defer = requestAnimationFrame.bind(context);
 } else if ("setImmediate" in context) {
@@ -17,25 +17,25 @@ export const P_NORMAL = 5;
 export const P_HIGH = 7;
 export const P_IMPORTANT = 10;
 
-interface listNode {
-  value: Function;
-  next: listNode | null;
+interface IListNode {
+  value: () => void;
+  next: IListNode | null;
 }
 
 class LinkedList {
   private length: number;
-  private head: listNode | null;
-  private last: listNode;
+  private head: IListNode | null;
+  private last: IListNode;
 
   constructor() {
     this.head = null;
     this.length = 0;
   }
 
-  push(value: Function) {
-    const node: listNode = {
-      value: value,
-      next: null
+  public push(value: () => void) {
+    const node: IListNode = {
+      next: null,
+      value,
     };
 
     if (this.length === 0) {
@@ -49,8 +49,8 @@ class LinkedList {
     this.length++;
   }
 
-  shift() {
-    const currentHead = <listNode>this.head;
+  public shift() {
+    const currentHead = this.head as IListNode;
     const value = currentHead.value;
 
     this.head = currentHead.next;
@@ -59,7 +59,7 @@ class LinkedList {
     return value;
   }
 
-  isEmpty() {
+  public isEmpty() {
     return this.length === 0;
   }
 }
@@ -71,10 +71,10 @@ const frameScheduling = () => {
   let jobsSortCached: string[];
   let jobsSortActual = false;
 
-  const sortJobsByNumber = (jobs: Object) => {
+  const sortJobsByNumber = (jobs: object) => {
     if (!jobsSortActual) {
       jobsSortCached = Object.keys(jobs).sort(
-        (left: string, right: string) => Number(left) - Number(right)
+        (left: string, right: string) => Number(left) - Number(right),
       );
       jobsSortActual = true;
     }
@@ -90,7 +90,7 @@ const frameScheduling = () => {
     deferScheduled = true;
   };
 
-  const addJob = (callback: Function, priority: number) => {
+  const addJob = (callback: () => void, priority: number) => {
     if (!listJobs[priority]) {
       listJobs[priority] = new LinkedList();
       jobsSortActual = false;
@@ -101,7 +101,7 @@ const frameScheduling = () => {
   const raisingOfJob = () => {
     const keys = sortJobsByNumber(listJobs);
 
-    for (var i = keys.length; i > 0; i--) {
+    for (let i = keys.length; i > 0; i--) {
       const key = keys[i - 1];
 
       listJobs[Number(key) + 1] = listJobs[key];
@@ -130,7 +130,7 @@ const frameScheduling = () => {
         try {
           job();
         } catch (e) {
-          console.error(e);
+          console.error(e); // tslint:disable-line
         }
 
         if (jobs.isEmpty()) {
@@ -150,7 +150,7 @@ const frameScheduling = () => {
     }
   };
 
-  return function scheduling(callback: Function, { priority = P_NORMAL } = {}) {
+  return function scheduling(callback: () => void, { priority = P_NORMAL } = {}) {
     addJob(callback, priority);
 
     runDefer();
