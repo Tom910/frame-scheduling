@@ -160,10 +160,7 @@ describe("frameScheduling", () => {
   it("Run different defer modes", () => {
     jest.resetModules();
 
-    const originWindow = global["window"];
-
-    delete global["window"];
-    global["requestAnimationFrame"] = fn => setTimeout(fn, 0);
+    (global as any)["requestAnimationFrame"] = (fn: () => {}) => setTimeout(fn, 0);
 
     const scheduling = require("../src/frameScheduling").default;
 
@@ -172,8 +169,7 @@ describe("frameScheduling", () => {
     scheduling(() => (result += 2));
     jest.runAllTimers();
 
-    delete global["requestAnimationFrame"];
-    global["window"] = originWindow;
+    delete (global as any)["requestAnimationFrame"];
 
     expect(result).toBe(2);
     expect(setTimeout).toHaveBeenCalledTimes(1);
