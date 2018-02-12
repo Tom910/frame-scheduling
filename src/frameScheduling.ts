@@ -113,14 +113,10 @@ const frameScheduling = () => {
 
   const runJobs = () => {
     const timeRun = Date.now();
-    const keysJobs = sortJobsByNumber(listJobs);
-    let empty = false;
+    let keysJobs = sortJobsByNumber(listJobs);
 
     while (true) {
-      if (!keysJobs.length) {
-        empty = true;
-      }
-      if (empty || Date.now() - timeRun > TIME_LIFE_FRAME) {
+      if (!keysJobs.length || Date.now() - timeRun > TIME_LIFE_FRAME) {
         break;
       } else {
         const keyJob = keysJobs[keysJobs.length - 1];
@@ -141,9 +137,10 @@ const frameScheduling = () => {
       }
     }
 
+    keysJobs = sortJobsByNumber(listJobs);
     deferScheduled = false;
 
-    if (!empty) {
+    if (!!keysJobs.length) {
       raisingOfJob();
 
       runDefer();
