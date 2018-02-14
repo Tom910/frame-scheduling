@@ -1,4 +1,4 @@
-import frameScheduling, { P_HIGH, P_LOW } from "../src/frameScheduling";
+import frameScheduling, { P_HIGH, P_LOW, P_NORMAL } from "../src/frameScheduling";
 
 const mockDataNow = () => {
   let result = 1000;
@@ -197,5 +197,18 @@ describe("frameScheduling", () => {
 
       expect(result).toBe(3);
       expect(setTimeout).toHaveBeenCalledTimes(1);
+  });
+
+
+  it("stops correctly with different priority nested calls", () => {
+    const fn = jest.fn();
+
+    frameScheduling(() => {
+      frameScheduling(fn, { priority: P_NORMAL });
+    }, { priority: P_HIGH });
+    jest.runOnlyPendingTimers();
+    jest.runOnlyPendingTimers();
+
+    expect(fn).toBeCalled();
   });
 });
