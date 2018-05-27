@@ -25,10 +25,11 @@ interface IListNode {
 class LinkedList {
   private length: number;
   private head: IListNode | null;
-  private last: IListNode;
+  private last: IListNode | null;
 
   constructor() {
     this.head = null;
+    this.last = null;
     this.length = 0;
   }
 
@@ -42,7 +43,7 @@ class LinkedList {
       this.head = node;
       this.last = node;
     } else {
-      this.last.next = node;
+      (this.last as IListNode).next = node;
       this.last = node;
     }
 
