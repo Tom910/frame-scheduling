@@ -1,3 +1,4 @@
+/* tslint:disable no-bitwise */
 const context = typeof window !== "undefined" ? window : global;
 
 let defer: (f: () => void) => void;
@@ -17,15 +18,110 @@ export const P_NORMAL = 5;
 export const P_HIGH = 7;
 export const P_IMPORTANT = 10;
 
-interface IListNode {
+interface QueueItem<T> { priority: number; value: T; }
+class PriorityQueue<T> {
+  private data: Array<QueueItem<T>>;
+  private length: number;
+
+  constructor() {
+    this.data = [];
+    this.length = 0;
+  }
+
+  public push(priority: number, value: T) {
+    this.data.push({ priority, value });
+    this.length++;
+    this.up(this.length - 1);
+  }
+
+  public pop() {
+    const top = this.data[0];
+    this.length--;
+
+    if (this.length > 0) {
+      this.data[0] = this.data[this.length];
+      this.down(0);
+    }
+    this.data.pop();
+
+    return top.value;
+  }
+
+  public peek() {
+    return this.data[0].value;
+  }
+
+  public get(priority: number) {
+    for (const item of this.data) {
+      if (item.priority === priority) {
+        return item.value;
+      }
+    }
+
+    return null;
+  }
+
+  public forEach(callback: (item: QueueItem<T>) => void) {
+    this.data.forEach(callback);
+  }
+
+  public isEmpty() {
+    return this.data.length === 0;
+  }
+
+  private compare(a: QueueItem<T>, b: QueueItem<T>) {
+    return a.priority > b.priority ? -1 : 1;
+  }
+
+  private up(pos: number) {
+    const data = this.data;
+    const compare = this.compare;
+    const item = data[pos];
+
+    while (pos > 0) {
+      const parent = (pos - 1) >> 1;
+      const current = data[parent];
+      if (compare(item, current) >= 0) {
+        break;
+      }
+      data[pos] = current;
+      pos = parent;
+    }
+
+    data[pos] = item;
+  }
+
+  private down(pos: number) {
+    const data = this.data;
+    const compare = this.compare;
+    const halfLength = this.length >> 1;
+    const item = data[pos];
+
+    while (pos < halfLength) {
+      const left = (pos << 1) + 1;
+      const best = data[left];
+
+      if (compare(best, item) >= 0) {
+        break;
+      }
+
+      data[pos] = best;
+      pos = left;
+    }
+
+    data[pos] = item;
+  }
+}
+
+interface ListNode {
   value: () => void;
-  next: IListNode | null;
+  next: ListNode | null;
 }
 
 class LinkedList {
   private length: number;
-  private head: IListNode | null;
-  private last: IListNode | null;
+  private head: ListNode | null;
+  private last: ListNode | null;
 
   constructor() {
     this.head = null;
@@ -34,7 +130,7 @@ class LinkedList {
   }
 
   public push(value: () => void) {
-    const node: IListNode = {
+    const node: ListNode = {
       next: null,
       value,
     };
@@ -43,7 +139,7 @@ class LinkedList {
       this.head = node;
       this.last = node;
     } else {
-      (this.last as IListNode).next = node;
+      (this.last as ListNode).next = node;
       this.last = node;
     }
 
@@ -51,7 +147,7 @@ class LinkedList {
   }
 
   public shift() {
-    const currentHead = this.head as IListNode;
+    const currentHead = this.head as ListNode;
     const value = currentHead.value;
 
     this.head = currentHead.next;
@@ -66,22 +162,8 @@ class LinkedList {
 }
 
 const frameScheduling = () => {
-  const listJobs: { [l: string]: LinkedList } = {};
+  const heapJobs = new PriorityQueue<LinkedList>();
   let deferScheduled = false;
-
-  let jobsSortCached: string[];
-  let jobsSortActual = false;
-
-  const sortJobsByNumber = (jobs: object) => {
-    if (!jobsSortActual) {
-      jobsSortCached = Object.keys(jobs).sort(
-        (left: string, right: string) => Number(left) - Number(right),
-      );
-      jobsSortActual = true;
-    }
-
-    return jobsSortCached;
-  };
 
   const runDefer = () => {
     if (!deferScheduled) {
@@ -92,36 +174,25 @@ const frameScheduling = () => {
   };
 
   const addJob = (callback: () => void, priority: number) => {
-    if (!listJobs[priority]) {
-      listJobs[priority] = new LinkedList();
-      jobsSortActual = false;
-    }
-    listJobs[priority].push(callback);
-  };
+    const getJob = heapJobs.get(priority);
+    let newLinkedList;
 
-  const raisingOfJob = () => {
-    const keys = sortJobsByNumber(listJobs);
-
-    for (let i = keys.length; i > 0; i--) {
-      const key = keys[i - 1];
-
-      listJobs[Number(key) + 1] = listJobs[key];
-      delete listJobs[key];
+    if (!getJob) {
+      newLinkedList = new LinkedList();
+      heapJobs.push(priority, newLinkedList);
     }
 
-    jobsSortActual = false;
+    ((getJob || newLinkedList) as LinkedList).push(callback);
   };
 
   const runJobs = () => {
     const timeRun = Date.now();
-    let keysJobs = sortJobsByNumber(listJobs);
 
     while (true) {
-      if (!keysJobs.length || Date.now() - timeRun > TIME_LIFE_FRAME) {
+      if (heapJobs.isEmpty() || Date.now() - timeRun > TIME_LIFE_FRAME) {
         break;
       } else {
-        const keyJob = keysJobs[keysJobs.length - 1];
-        const jobs = listJobs[keyJob];
+        const jobs = heapJobs.peek();
         const job = jobs.shift();
 
         try {
@@ -131,18 +202,17 @@ const frameScheduling = () => {
         }
 
         if (jobs.isEmpty()) {
-          delete listJobs[keyJob];
-          keysJobs.length = keysJobs.length - 1;
-          jobsSortActual = false;
+          heapJobs.pop();
         }
       }
     }
 
-    keysJobs = sortJobsByNumber(listJobs);
     deferScheduled = false;
 
-    if (!!keysJobs.length) {
-      raisingOfJob();
+    if (!heapJobs.isEmpty()) {
+      heapJobs.forEach((item) => {
+        item.priority += 1;
+      });
 
       runDefer();
     }
