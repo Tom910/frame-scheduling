@@ -140,6 +140,20 @@ describe("frameScheduling", () => {
     expect(result).toEqual(354);
   });
 
+  it("Many runs with different priority", () => {
+    let result = 0;
+
+    frameScheduling(() => (result *= 2), { priority: 0 });
+    frameScheduling(() => (result *= 3), { priority: 49 });
+
+    for (let i = 0; i < 100; i++) {
+      frameScheduling(() => (result += 1), { priority: i });
+    }
+
+    jest.runOnlyPendingTimers();
+    expect(result).toEqual(383);
+  });
+
   it("Catching errors", () => {
     let result = 0;
 
@@ -198,7 +212,6 @@ describe("frameScheduling", () => {
       expect(result).toBe(3);
       expect(setTimeout).toHaveBeenCalledTimes(1);
   });
-
 
   it("stops correctly with different priority nested calls", () => {
     const fn = jest.fn();
