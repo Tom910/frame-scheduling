@@ -151,7 +151,7 @@ describe("frameScheduling", () => {
     }
 
     jest.runOnlyPendingTimers();
-    expect(result).toEqual(383);
+    expect(result).toEqual(399);
   });
 
   it("Catching errors", () => {
