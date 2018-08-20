@@ -1,16 +1,20 @@
 {
   "name": "frame-scheduling",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "description": "Asynchronous start of functions in JS. Supports priority and interrupt execution every 16 milliseconds, to achieve 60fps.",
-  "main": "lib/frameScheduling.js",
   "scripts": {
-    "build": "tsc",
+    "build": "rollup -c",
     "prepublishOnly": "npm run build",
     "test": "jest",
     "test:coverage": "jest --coverage",
     "test:watch": "jest --watch",
     "cli": "npm run test:coverage && cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js"
   },
+  "files": [ "dist", "src" ],
+  "main": "dist/frameScheduling.js",
+  "module": "dist/frameScheduling.esm.js",
+  "es2015": "dist/frameScheduling.esm2015.js",
+  "types": "dist/frameScheduling.d.ts",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Tom910/frame-scheduling.git"
@@ -21,20 +25,6 @@
   "bugs": {
     "url": "https://github.com/Tom910/frame-scheduling/issues"
   },
-  "jest": {
-    "moduleFileExtensions": [
-      "ts",
-      "js"
-    ],
-    "transform": {
-      "^.+\\.ts$": "<rootDir>/node_modules/ts-jest/preprocessor.js"
-    },
-    "timers": "fake",
-    "mapCoverage": true,
-    "testMatch": [
-      "<rootDir>/tests/**/*.(ts|js)"
-    ]
-  },
   "homepage": "https://github.com/Tom910/frame-scheduling#readme",
   "devDependencies": {
     "@types/jest": "^21.1.4",
@@ -42,6 +32,8 @@
     "coveralls": "^3.0.0",
     "jest": "^21.2.1",
     "prettier": "1.7.4",
+    "rollup": "^0.64.1",
+    "rollup-plugin-typescript2": "^0.16.1",
     "ts-jest": "^21.1.4",
     "tslint": "^5.8.0",
     "typescript": "^3.0.1"

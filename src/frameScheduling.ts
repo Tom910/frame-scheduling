@@ -1,4 +1,3 @@
-/* tslint:disable no-bitwise */
 const context = typeof window !== "undefined" ? window : global;
 
 let defer: (f: () => void) => void;
@@ -19,97 +18,147 @@ export const P_HIGH = 7;
 export const P_IMPORTANT = 10;
 
 interface QueueItem<T> { priority: number; value: T; }
-class PriorityQueue<T> {
-  private data: Array<QueueItem<T>>;
-  private length: number;
+class PriorityUniqQueue<T> {
+  private heapContainer: Array<QueueItem<T>>;
+  private hashPriority: Record<string, T>;
 
   constructor() {
-    this.data = [];
-    this.length = 0;
-  }
-
-  public push(priority: number, value: T) {
-    this.data.push({ priority, value });
-    this.length++;
-    this.up(this.length - 1);
-  }
-
-  public pop() {
-    const top = this.data[0];
-    this.length--;
-
-    if (this.length > 0) {
-      this.data[0] = this.data[this.length];
-      this.down(0);
-    }
-    this.data.pop();
-
-    return top.value;
+    this.heapContainer = [];
+    this.hashPriority = Object.create(null);
   }
 
   public peek() {
-    return this.data[0].value;
+    return this.heapContainer[0].value;
   }
 
-  public get(priority: number) {
-    for (const item of this.data) {
-      if (item.priority === priority) {
-        return item.value;
-      }
+  public poll() {
+    let item;
+
+    if (this.heapContainer.length === 1) {
+      item = (this.heapContainer.pop() as QueueItem<T>);
+    } else {
+      item = this.heapContainer[0];
+
+      this.heapContainer[0] = (this.heapContainer.pop() as QueueItem<T>);
+
+      this.heapifyDown();
     }
 
-    return null;
+    delete this.hashPriority[item.priority];
+
+    return item.value;
   }
 
-  public forEach(callback: (item: QueueItem<T>) => void) {
-    this.data.forEach(callback);
+  public add(priority: number, value: T) {
+    this.heapContainer.push({ priority, value });
+    this.heapifyUp();
+    this.hashPriority[priority] = value;
   }
 
   public isEmpty() {
-    return this.data.length === 0;
+    return !this.heapContainer.length;
   }
 
-  private compare(a: QueueItem<T>, b: QueueItem<T>) {
-    return a.priority > b.priority ? -1 : 1;
+  public get(priority: number) {
+    return this.hashPriority[priority];
   }
 
-  private up(pos: number) {
-    const data = this.data;
-    const compare = this.compare;
-    const item = data[pos];
+  public rising() {
+    const keys = Object.keys(this.hashPriority);
 
-    while (pos > 0) {
-      const parent = (pos - 1) >> 1;
-      const current = data[parent];
-      if (compare(item, current) >= 0) {
-        break;
-      }
-      data[pos] = current;
-      pos = parent;
+    for (let i = keys.length; i > 0; i--) {
+      const key = keys[i - 1];
+
+      this.hashPriority[Number(key) + 1] = this.hashPriority[key];
+      delete this.hashPriority[key];
     }
 
-    data[pos] = item;
+    for (let j = 0; j < this.heapContainer.length; j++) {
+      this.heapContainer[j].priority += 1;
+    }
   }
 
-  private down(pos: number) {
-    const data = this.data;
-    const compare = this.compare;
-    const halfLength = this.length >> 1;
-    const item = data[pos];
+  private heapifyUp(customStartIndex?: number) {
+    let currentIndex = customStartIndex || this.heapContainer.length - 1;
 
-    while (pos < halfLength) {
-      const left = (pos << 1) + 1;
-      const best = data[left];
+    while (
+      this.hasParent(currentIndex)
+      && !this.pairIsInCorrectOrder(
+        this.heapContainer[this.getParentIndex(currentIndex)],
+        this.heapContainer[currentIndex],
+      )
+    ) {
+      this.swap(currentIndex, this.getParentIndex(currentIndex));
+      currentIndex = this.getParentIndex(currentIndex);
+    }
+  }
 
-      if (compare(best, item) >= 0) {
+  private heapifyDown(customStartIndex?: number) {
+    let currentIndex = customStartIndex || 0;
+    let nextIndex = null;
+
+    while (this.hasLeftChild(currentIndex)) {
+      if (
+        this.hasRightChild(currentIndex)
+        && this.pairIsInCorrectOrder(this.rightChild(currentIndex), this.leftChild(currentIndex))
+      ) {
+        nextIndex = this.getRightChildIndex(currentIndex);
+      } else {
+        nextIndex = this.getLeftChildIndex(currentIndex);
+      }
+
+      if (this.pairIsInCorrectOrder(
+        this.heapContainer[currentIndex],
+        this.heapContainer[nextIndex],
+      )) {
         break;
       }
 
-      data[pos] = best;
-      pos = left;
+      this.swap(currentIndex, nextIndex);
+      currentIndex = nextIndex;
     }
+  }
 
-    data[pos] = item;
+  private pairIsInCorrectOrder(firstElement: QueueItem<T>, secondElement: QueueItem<T>) {
+    return firstElement.priority >= secondElement.priority;
+  }
+
+  private getLeftChildIndex(parentIndex: number) {
+    return (2 * parentIndex) + 1;
+  }
+
+  private getRightChildIndex(parentIndex: number) {
+    return (2 * parentIndex) + 2;
+  }
+
+  private getParentIndex(childIndex: number) {
+    return Math.floor((childIndex - 1) / 2);
+  }
+
+  private hasParent(childIndex: number) {
+    return this.getParentIndex(childIndex) >= 0;
+  }
+
+  private hasLeftChild(parentIndex: number) {
+    return this.getLeftChildIndex(parentIndex) < this.heapContainer.length;
+  }
+
+  private hasRightChild(parentIndex: number) {
+    return this.getRightChildIndex(parentIndex) < this.heapContainer.length;
+  }
+
+  private leftChild(parentIndex: number) {
+    return this.heapContainer[this.getLeftChildIndex(parentIndex)];
+  }
+
+  private rightChild(parentIndex: number) {
+    return this.heapContainer[this.getRightChildIndex(parentIndex)];
+  }
+
+  private swap(indexOne: number, indexTwo: number) {
+    const tmp = this.heapContainer[indexTwo];
+    this.heapContainer[indexTwo] = this.heapContainer[indexOne];
+    this.heapContainer[indexOne] = tmp;
   }
 }
 
@@ -162,7 +211,7 @@ class LinkedList {
 }
 
 const frameScheduling = () => {
-  const heapJobs = new PriorityQueue<LinkedList>();
+  const heapJobs = new PriorityUniqQueue<LinkedList>();
   let deferScheduled = false;
 
   const runDefer = () => {
@@ -179,7 +228,7 @@ const frameScheduling = () => {
 
     if (!getJob) {
       newLinkedList = new LinkedList();
-      heapJobs.push(priority, newLinkedList);
+      heapJobs.add(priority, newLinkedList);
     }
 
     ((getJob || newLinkedList) as LinkedList).push(callback);
@@ -202,7 +251,7 @@ const frameScheduling = () => {
         }
 
         if (jobs.isEmpty()) {
-          heapJobs.pop();
+          heapJobs.poll();
         }
       }
     }
@@ -210,9 +259,7 @@ const frameScheduling = () => {
     deferScheduled = false;
 
     if (!heapJobs.isEmpty()) {
-      heapJobs.forEach((item) => {
-        item.priority += 1;
-      });
+      heapJobs.rising();
 
       runDefer();
     }
