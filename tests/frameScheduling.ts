@@ -1,5 +1,3 @@
-import frameScheduling, { P_HIGH, P_LOW, P_NORMAL } from "../src/frameScheduling";
-
 const mockDataNow = () => {
   let result = 1000;
   let count = 0;
@@ -20,7 +18,10 @@ const mockDataNow = () => {
   };
 };
 
+(global as any).requestAnimationFrame = (fn: () => {}) => setImmediate(fn);
+
 describe("frameScheduling", () => {
+  const { default: frameScheduling, P_HIGH, P_LOW, P_NORMAL } = require("../src/frameScheduling");
   const originDateNow = Date.now.bind(Date);
   const originConsoleError = console.error;
 
@@ -49,6 +50,24 @@ describe("frameScheduling", () => {
     jest.runOnlyPendingTimers();
 
     expect(setImmediate).toHaveBeenCalledTimes(1);
+    expect(counter).toBe(3);
+  });
+
+  it("Run scheduling with custom sync defer mode", () => {
+    const { createFrameScheduling } = require("../src/frameScheduling");
+    const frameScheduling = createFrameScheduling((fn: () => void) => fn(), 10000);
+    let counter = 0;
+
+    frameScheduling(function d1() {
+      counter++;
+    });
+    frameScheduling(function d2() {
+      counter++;
+    });
+    frameScheduling(function d3() {
+      counter++;
+    });
+
     expect(counter).toBe(3);
   });
 
@@ -213,7 +232,27 @@ describe("frameScheduling", () => {
       expect(setTimeout).toHaveBeenCalledTimes(1);
   });
 
-  it("stops correctly with different priority nested calls", () => {
+  it("Using setImmediateFallback", () => {
+    jest.resetModules();
+
+    const originRequestAnimationFrame = (global as any).requestAnimationFrame;
+
+    delete (global as any).requestAnimationFrame;
+
+    const scheduling = require("../src/frameScheduling").default;
+
+    let result = 0;
+
+    scheduling(() => (result += 3));
+    jest.runAllTimers();
+
+    (global as any).requestAnimationFrame = originRequestAnimationFrame;
+
+    expect(result).toBe(3);
+    expect(setImmediate).toHaveBeenCalledTimes(1);
+});
+
+  it("starts correctly with different priority nested calls", () => {
     const fn = jest.fn();
 
     frameScheduling(() => {
