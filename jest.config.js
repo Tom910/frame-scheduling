@@ -4,10 +4,9 @@ module.exports = {
         "js"
     ],
     "transform": {
-        "^.+\\.ts$": "<rootDir>/node_modules/ts-jest/preprocessor.js"
+        "^.+\\.ts$": "ts-jest"
     },
     "timers": "fake",
-    "mapCoverage": true,
     "testMatch": [
         "<rootDir>/tests/**/*.(ts|js)"
     ]
